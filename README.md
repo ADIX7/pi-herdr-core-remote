@@ -4,7 +4,7 @@ A [Pi](https://pi.dev) package that starts **local** and switches Pi's normal co
 
 ## Requirements
 
-- Pi 1.5.2+, Node.js 22.19.0+ and `hc` on the local `PATH`.
+- Pi 1.5.2+, Node.js 22.19.0+, and the Herdr Core CLI on the local `PATH`. The extension prefers `hc` and uses `herdr-core` if `hc` is missing. Substitute your installed binary name in the commands below.
 - A machine registered with `hc machine add <name>`, connected and running a compatible Herdr Core. The remote must have `bash` and `rg` (ripgrep) for shell and search tools. Unix-like paths and command-line utilities are required.
 - The remote working directory must already exist and be accessible. Connection failures **never** cause a remote call to run locally.
 

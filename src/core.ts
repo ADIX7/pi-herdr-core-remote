@@ -11,13 +11,25 @@ export function remotePath(cwd: string, value: string): string {
   return path.posix.resolve(cwd, input);
 }
 
-/** hc emits JSON even on remote errors; never interpret a failed transport as a local operation. */
+/** Herdr Core emits JSON even on remote errors. Only a missing CLI can trigger a retry. */
 interface CoreError { error?: { kind?: string; message: string }; code?: number }
 
-export function hc<T = Record<string, unknown>>(args: string[], input?: Buffer, signal?: AbortSignal): Promise<T> {
+export async function hc<T = Record<string, unknown>>(args: string[], input?: Buffer, signal?: AbortSignal): Promise<T> {
+  for (const binary of ["hc", "herdr-core"]) {
+    try {
+      return await runCore<T>(binary, args, input, signal);
+    } catch (error) {
+      const failure = error as NodeJS.ErrnoException;
+      if (failure.code !== "ENOENT" || failure.syscall !== `spawn ${binary}`) throw error;
+    }
+  }
+  throw new Error("Herdr Core CLI not found on PATH (tried hc and herdr-core)");
+}
+
+function runCore<T>(binary: string, args: string[], input?: Buffer, signal?: AbortSignal): Promise<T> {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) return reject(new Error("Operation aborted"));
-    const child = spawn("hc", ["--json", ...args], { stdio: ["pipe", "pipe", "pipe"] });
+    const child = spawn(binary, ["--json", ...args], { stdio: ["pipe", "pipe", "pipe"] });
     const stdout: Buffer[] = [], stderr: Buffer[] = [];
     let size = 0;
     const onAbort = () => child.kill();
@@ -36,9 +48,9 @@ export function hc<T = Record<string, unknown>>(args: string[], input?: Buffer, 
       const output = Buffer.concat(stdout).toString("utf8");
       let result: CoreError;
       try { result = JSON.parse(output); }
-      catch { return reject(new Error(`hc exited ${code}: ${Buffer.concat(stderr).toString("utf8") || output}`)); }
-      if (result?.error) return reject(new Error(`hc ${result.error.kind ?? "error"}: ${result.error.message}`));
-      if (code !== 0 && result?.code === undefined) return reject(new Error(`hc exited ${code}: ${Buffer.concat(stderr).toString("utf8") || output}`));
+      catch { return reject(new Error(`${binary} exited ${code}: ${Buffer.concat(stderr).toString("utf8") || output}`)); }
+      if (result?.error) return reject(new Error(`${binary} ${result.error.kind ?? "error"}: ${result.error.message}`));
+      if (code !== 0 && result?.code === undefined) return reject(new Error(`${binary} exited ${code}: ${Buffer.concat(stderr).toString("utf8") || output}`));
       resolve(result as T);
     });
     if (input) child.stdin.end(input);
