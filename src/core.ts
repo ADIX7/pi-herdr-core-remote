@@ -47,12 +47,10 @@ export function hc<T = Record<string, unknown>>(args: string[], input?: Buffer, 
   });
 }
 
-export async function exec(remote: Remote, argv: string[], options: { cwd?: string; timeout?: number; signal?: AbortSignal; env?: NodeJS.ProcessEnv } = {}): Promise<{ code: number; stdout: Buffer; stderr: Buffer }> {
+export async function exec(remote: Remote, argv: string[], options: { cwd?: string; timeout?: number; signal?: AbortSignal } = {}): Promise<{ code: number; stdout: Buffer; stderr: Buffer }> {
   const timeout = options.timeout ?? 60;
   if (!Number.isInteger(timeout) || timeout < 1 || timeout > 600) throw new Error("hc timeout must be 1–600 seconds");
-  const env = Object.entries(options.env ?? {}).flatMap(([key, value]) =>
-    key.startsWith("PI_") && typeof value === "string" ? ["--env", `${key}=${value}`] : []);
-  const result = await hc<ExecResult>(["exec", "--on", remote.machine, "--cwd", options.cwd ?? remote.cwd, "--timeout", String(timeout), ...env, "--", ...argv], undefined, options.signal);
+  const result = await hc<ExecResult>(["exec", "--on", remote.machine, "--cwd", options.cwd ?? remote.cwd, "--timeout", String(timeout), "--", ...argv], undefined, options.signal);
   if (result.timed_out) throw new Error(`Remote command timed out after ${timeout}s`);
   if (result.truncated) throw new Error("Remote command output exceeded Herdr Core's output limit");
   return { code: result.code ?? 1, stdout: Buffer.from(result.stdout ?? "", "base64"), stderr: Buffer.from(result.stderr ?? "", "base64") };

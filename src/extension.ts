@@ -45,8 +45,8 @@ function editOps(remote: Remote, signal?: AbortSignal): EditOperations {
 }
 function bashOps(remote: Remote, localCwd: string): BashOperations {
   return {
-    exec: async (command, cwd, { onData, signal, timeout, env }) => {
-      const result = await exec(remote, ["bash", "-lc", command], { cwd: cwd === localCwd ? remote.cwd : cwd, signal, timeout, env });
+    exec: async (command, cwd, { onData, signal, timeout }) => {
+      const result = await exec(remote, ["bash", "-lc", command], { cwd: cwd === localCwd ? remote.cwd : cwd, signal, timeout });
       // hc exec returns bounded stdout/stderr together at completion, not live chunks.
       if (result.stdout.length) onData(result.stdout);
       if (result.stderr.length) onData(result.stderr);

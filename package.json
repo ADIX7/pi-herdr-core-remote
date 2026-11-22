@@ -1,11 +1,19 @@
 {
-  "name": "pi-herdr-core-remote",
+  "name": "@adix7/pi-herdr-core-remote",
   "version": "0.1.0",
   "description": "Route Pi coding tools to a Herdr Core machine",
   "license": "MIT",
   "type": "module",
   "keywords": ["pi-package", "herdr-core", "remote"],
-  "files": ["src", "README.md", "LICENSE"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ADIX7/pi-herdr-core-remote.git"
+  },
+  "bugs": { "url": "https://github.com/ADIX7/pi-herdr-core-remote/issues" },
+  "homepage": "https://github.com/ADIX7/pi-herdr-core-remote#readme",
+  "engines": { "node": ">=22.19.0" },
+  "publishConfig": { "access": "public" },
+  "files": ["src", "README.md", "CHANGELOG.md", "LICENSE"],
   "pi": { "extensions": ["./src/extension.ts"] },
   "peerDependencies": { "@earendil-works/pi-coding-agent": "*" },
   "scripts": { "test": "node --test test/*.test.mjs" }
